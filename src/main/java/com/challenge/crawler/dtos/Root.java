@@ -10,5 +10,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Root {
-    List<Page> pages;
+    private List<Page> pages;
 }

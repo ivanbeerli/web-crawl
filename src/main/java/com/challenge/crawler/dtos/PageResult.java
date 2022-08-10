@@ -13,7 +13,7 @@ import java.util.Optional;
 @Builder
 public class PageResult {
 
-    String url;
-    Optional<Page> page;
+    private String url;
+    private Optional<Page> page;
 
 }

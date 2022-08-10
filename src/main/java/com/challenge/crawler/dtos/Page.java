@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 public class Page {
 
-    String address;
-    List<String> links;
+    private String address;
+    private List<String> links;
 
 }

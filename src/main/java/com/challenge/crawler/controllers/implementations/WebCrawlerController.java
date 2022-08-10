@@ -17,7 +17,7 @@ public class WebCrawlerController implements IWebCrawlerController {
 
     private static final Logger LOGGER = LogManager.getLogger(WebCrawlerController.class);
 
-    IWebCrawlerService webCrawler;
+    private IWebCrawlerService webCrawler;
 
     @Autowired
     public WebCrawlerController(IWebCrawlerService webCrawler){

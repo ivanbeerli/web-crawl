@@ -14,7 +14,7 @@ import javax.validation.ConstraintViolationException;
 public class WebCrawlerControllerTest {
 
     @Autowired
-    WebCrawlerController webCrawler;
+    private WebCrawlerController webCrawler;
 
     @Test
     public void shouldSuccessGetInformation(){

@@ -16,7 +16,7 @@ import java.util.List;
 public class ResourceComponent {
 
     @Value("classpath:static/internet.json")
-    Resource resource;
+    private Resource resource;
 
 
     public List<Page> getPages(){
