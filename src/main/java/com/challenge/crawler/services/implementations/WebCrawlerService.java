@@ -2,88 +2,112 @@ package com.challenge.crawler.services.implementations;
 
 import com.challenge.crawler.components.ResourceComponent;
 import com.challenge.crawler.dtos.Page;
+import com.challenge.crawler.dtos.PageResult;
 import com.challenge.crawler.dtos.WebCrawlerResult;
 import com.challenge.crawler.services.contracts.IWebCrawlerService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 
 @Component
 @Validated
-@Scope("prototype")
 public class WebCrawlerService implements IWebCrawlerService {
 
 
     private static final Logger LOGGER = LogManager.getLogger(WebCrawlerService.class);
 
-    private Set<String> success;
-    private Set<String> skipped;
-    private Set<String> errors;
-    List<Page> pages;
-    ResourceComponent resourceComponent;
+    private List<Page> pages;
+    private ResourceComponent resourceComponent;
 
     @Autowired
     public WebCrawlerService(ResourceComponent resourceComponent){
         this.resourceComponent = resourceComponent;
-        success = new HashSet<>();
-        skipped = new HashSet<>();
-        errors = new HashSet<>();
         pages = resourceComponent.getPages();
     }
 
-    public synchronized WebCrawlerResult crawlPage(String url){
-        success = new HashSet<>();
-        skipped = new HashSet<>();
-        errors = new HashSet<>();
-        crawl(url);
-        printReport();
-        return WebCrawlerResult.builder()
-                .success(success)
-                .skipped(skipped)
-                .errors(errors)
+    public WebCrawlerResult crawlPage(String url){
+        var webSearch=  WebCrawlerResult.builder()
+                .success(new HashSet<>())
+                .skipped(new HashSet<>())
+                .errors(new HashSet<>())
+                .executing(new HashSet<>())
+                .build();
+        var pageResult = visit(url);
+        boolean continueProcessing = processPageResults(pageResult, webSearch);
+        if(continueProcessing){
+            searchLinks(pageResult, webSearch);
+        }
+        printReport(webSearch);
+        return webSearch;
+    }
+
+    private PageResult visit(String url){
+        return PageResult.builder()
+                .url(url)
+                .page(pages.stream()
+                        .filter( page -> page.getAddress().equalsIgnoreCase(url))
+                        .findFirst())
                 .build();
     }
 
-    private void crawl(String url) {
-        if(success.contains(url) ){
-            skipped.add(url);
-            return;
-        }
-        if(errors.contains(url) ){
-            skipped.add(url);
-            return;
-        }
 
-        Optional<Page> optionalPage = visit(url);
-
-        if(optionalPage.isPresent()){
-            success.add(url);
-            optionalPage.get().getLinks()
-                    .parallelStream()
-                    .forEach(page -> crawl(page));
-        }else{
-            errors.add(url);
+    private boolean processPageResults(PageResult pageResult, WebCrawlerResult webSearch){
+        synchronized (webSearch) {
+            webSearch.getExecuting().remove(pageResult.getUrl());
+            if (pageResult.getPage().isEmpty()) {
+                webSearch.getErrors().add(pageResult.getUrl());
+                return false;
+            }else{
+                webSearch.getSuccess().add(pageResult.getUrl());
+                return true;
+            }
         }
     }
 
-    private Optional<Page> visit(String url){
-        return pages.stream()
-                .filter( page -> page.getAddress().equalsIgnoreCase(url))
-                .findFirst();
+    private void searchLinks(PageResult pageResult, WebCrawlerResult webSearch){
+        pageResult.getPage().get().getLinks()
+                .parallelStream()
+                    .filter( link -> shouldVisit(link, webSearch))
+                    .map( link -> visit(link))
+                    .forEach( result -> {   boolean next = processPageResults(result, webSearch);
+                            if(next){
+                                searchLinks(result, webSearch);
+                            }
+                        });
     }
 
-    private void printReport(){
-        LOGGER.info("Success: {}", success);
-        LOGGER.info("Skipped: {}", skipped);
-        LOGGER.info("Errors: {}", errors);
+    private boolean shouldVisit(String url, WebCrawlerResult webSearch){
+        synchronized (webSearch) {
+            if (webSearch.getSuccess().contains(url)) {
+                webSearch.getSkipped().add(url);
+                return false;
+            }
+            if (webSearch.getSkipped().contains(url)) {
+                return false;
+            }
+            if (webSearch.getErrors().contains(url)) {
+                webSearch.getSkipped().add(url);
+                return false;
+            }
+            if (webSearch.getExecuting().contains(url)) {
+                webSearch.getSkipped().add(url);
+                return false;
+            }
+            webSearch.getExecuting().add(url);
+            return true;
+        }
     }
+
+    private void printReport(WebCrawlerResult webSearch){
+        LOGGER.info("Success: {}", webSearch.getSuccess());
+        LOGGER.info("Skipped: {}", webSearch.getSkipped());
+        LOGGER.info("Errors: {}", webSearch.getErrors());
+    }
+
+
 }
