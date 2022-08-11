@@ -89,7 +89,6 @@ public class WebCrawler {
     }
 
     private synchronized boolean shouldVisit(String url) {
-        LOGGER.info(this);
         if (success.contains(url)) {
             skipped.add(url);
             return false;
@@ -113,6 +112,5 @@ public class WebCrawler {
         LOGGER.info("Success: {}", success);
         LOGGER.info("Skipped: {}", skipped);
         LOGGER.info("Errors: {}", errors);
-        LOGGER.info(this);
     }
 }
