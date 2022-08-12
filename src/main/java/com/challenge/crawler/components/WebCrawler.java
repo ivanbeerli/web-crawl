@@ -62,7 +62,7 @@ public class WebCrawler {
     }
 
 
-    private synchronized boolean processPageResults(PageResult pageResult) {
+    private boolean processPageResults(PageResult pageResult) {
         executing.remove(pageResult.getUrl());
         if (pageResult.getPage().isEmpty()) {
             errors.add(pageResult.getUrl());
@@ -87,8 +87,7 @@ public class WebCrawler {
                     });
         }
     }
-
-    private synchronized boolean shouldVisit(String url) {
+    private boolean shouldVisit(String url) {
         if (success.contains(url)) {
             skipped.add(url);
             return false;
@@ -100,12 +99,14 @@ public class WebCrawler {
             skipped.add(url);
             return false;
         }
-        if (executing.contains(url)) {
-            skipped.add(url);
-            return false;
+        synchronized (executing) {
+            if (executing.contains(url)) {
+                skipped.add(url);
+                return false;
+            }
+            executing.add(url);
+            return true;
         }
-        executing.add(url);
-        return true;
     }
 
     private void printReport() {
