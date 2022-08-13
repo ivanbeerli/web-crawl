@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 @RequestMapping(path = "/pages", produces = MediaType.APPLICATION_JSON_VALUE)
 public interface IWebCrawlerController {

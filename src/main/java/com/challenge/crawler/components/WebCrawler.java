@@ -10,9 +10,11 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -21,22 +23,23 @@ public class WebCrawler {
     private static final Logger LOGGER = LogManager.getLogger(WebCrawler.class);
 
     private final Set<String> executing;
-    private final Set<String> success;
+    private final List<String> success;
     private final Set<String> skipped;
-    private final Set<String> errors;
+    private final List<String> errors;
     private final List<Page> pages;
 
     @Autowired
     public WebCrawler(ResourceComponent resourceComponent) {
         this.pages = resourceComponent.getPages();
-        executing = new HashSet<>();
-        success = new HashSet<>();
+        executing = ConcurrentHashMap.newKeySet();
+        success = new ArrayList<>();
         skipped = new HashSet<>();
-        errors = new HashSet<>();
+        errors = new ArrayList<>();
     }
 
     public WebCrawlerResult executeSearch(String address) {
 
+        executing.add(address);
         var pageResult = visit(address);
         boolean continueProcessing = processPageResults(pageResult);
         if (continueProcessing) {
@@ -63,7 +66,6 @@ public class WebCrawler {
 
 
     private boolean processPageResults(PageResult pageResult) {
-        executing.remove(pageResult.getUrl());
         if (pageResult.getPage().isEmpty()) {
             errors.add(pageResult.getUrl());
             return false;
@@ -88,25 +90,11 @@ public class WebCrawler {
         }
     }
     private boolean shouldVisit(String url) {
-        if (success.contains(url)) {
+        if(!executing.add(url)){
             skipped.add(url);
             return false;
         }
-        if (skipped.contains(url)) {
-            return false;
-        }
-        if (errors.contains(url)) {
-            skipped.add(url);
-            return false;
-        }
-        synchronized (executing) {
-            if (executing.contains(url)) {
-                skipped.add(url);
-                return false;
-            }
-            executing.add(url);
-            return true;
-        }
+        return true;
     }
 
     private void printReport() {

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -13,7 +14,7 @@ import java.util.Set;
 @Builder
 public class WebCrawlerResult {
 
-    private Set<String> success;
+    private List<String> success;
     private Set<String> skipped;
-    private Set<String> errors;
+    private List<String> errors;
 }

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import javax.json.bind.JsonbBuilder;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
 import java.util.List;
 
 @Component
