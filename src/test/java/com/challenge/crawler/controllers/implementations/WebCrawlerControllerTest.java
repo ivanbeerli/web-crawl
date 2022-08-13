@@ -1,4 +1,4 @@
-package com.challenge.crawler.contracts.implementations;
+package com.challenge.crawler.controllers.implementations;
 
 import com.challenge.crawler.controllers.implementations.WebCrawlerController;
 import org.junit.jupiter.api.Assertions;
