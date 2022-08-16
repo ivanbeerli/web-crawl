@@ -10,8 +10,9 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,9 +33,9 @@ public class WebCrawler {
     public WebCrawler(ResourceComponent resourceComponent) {
         this.pages = resourceComponent.getPages();
         executing = ConcurrentHashMap.newKeySet();
-        success = new ArrayList<>();
-        skipped = new HashSet<>();
-        errors = new ArrayList<>();
+        success = Collections.synchronizedList(new ArrayList<>());
+        skipped = ConcurrentHashMap.newKeySet();
+        errors = Collections.synchronizedList(new ArrayList<>());
     }
 
     public WebCrawlerResult executeSearch(String address) {
